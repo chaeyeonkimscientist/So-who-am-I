@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chaeyeon Kim — Creative Fellowship</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
+
+  :root {
+    --desktop-bg: #6b7c8f;
+    --window-bg: #ececec;
+    --window-border: #ffffff;
+    --window-shadow: #00000055;
+    --titlebar-active: linear-gradient(180deg, #6a9fd8 0%, #3a6ea5 100%);
+    --titlebar-inactive: linear-gradient(180deg, #aaaaaa 0%, #888888 100%);
+    --text-dark: #1a1a1a;
+    --accent: #c0392b;
+    --icon-label: #ffffff;
+    --stress-low: #4a90d9;
+    --stress-high: #c0392b;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Space Mono', monospace;
+    background: var(--desktop-bg);
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background-image:
+      radial-gradient(ellipse at 20% 50%, #7a8fa3 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 20%, #5a6d80 0%, transparent 40%);
+    cursor: default;
+    user-select: none;
+  }
+
+  /* ── MENUBAR ── */
+  #menubar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 22px;
+    background: rgba(30,30,30,0.85);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    z-index: 9999;
+    gap: 16px;
+  }
+  #menubar .apple { font-size: 14px; color: white; }
+  #menubar span {
+    font-size: 11px;
+    color: rgba(255,255,255,0.85);
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.02em;
+  }
+  #menubar .right {
+    margin-left: auto;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  #clock {
+    font-size: 11px;
+    color: rgba(255,255,255,0.85);
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* ── DESKTOP ICONS ── */
+  #desktop {
+    position: fixed;
+    top: 22px; left: 0; right: 0; bottom: 0;
+    padding: 20px;
+  }
+
+  .icon-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    position: absolute;
+    right: 24px;
+    top: 40px;
+    align-items: center;
+  }
+
+  .icon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    width: 80px;
+    transition: transform 0.1s;
+  }
+
+  .icon:hover { transform: scale(1.05); }
+  .icon:active { transform: scale(0.96); }
+
+  .icon-img {
+    width: 52px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+  }
+
+  .icon-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--icon-label);
+    text-align: center;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.8), 0 0 8px rgba(0,0,0,0.5);
+    line-height: 1.3;
+    max-width: 80px;
+    word-break: break-word;
+  }
+
+  .icon.selected .icon-label {
+    background: #0055cc;
+    border-radius: 2px;
+    padding: 1px 3px;
+  }
+
+  /* ── WINDOWS ── */
+  .window {
+    position: absolute;
+    background: var(--window-bg);
+    border: 1px solid #aaa;
+    border-radius: 6px;
+    box-shadow: 2px 4px 20px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.8);
+    min-width: 320px;
+    min-height: 200px;
+    display: none;
+    flex-direction: column;
+    z-index: 100;
+    overflow: hidden;
+  }
+
+  .window.active { z-index: 500; }
+  .window.visible { display: flex; }
+
+  .titlebar {
+    background: var(--titlebar-active);
+    height: 22px;
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    gap: 6px;
+    cursor: move;
+    border-radius: 6px 6px 0 0;
+    flex-shrink: 0;
+  }
+
+  .window:not(.active) .titlebar {
+    background: var(--titlebar-inactive);
+  }
+
+  .traffic-lights {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+  }
+
+  .tl {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 1px solid rgba(0,0,0,0.2);
+    flex-shrink: 0;
+  }
+  .tl.close { background: #ff5f56; }
+  .tl.min   { background: #ffbd2e; }
+  .tl.max   { background: #27c93f; }
+  .tl:hover { filter: brightness(1.1); }
+
+  .titlebar-title {
+    font-size: 11px;
+    font-family: 'Space Mono', monospace;
+    color: rgba(255,255,255,0.95);
+    text-shadow: 0 1px 1px rgba(0,0,0,0.3);
+    margin: 0 auto;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+  }
+
+  .window-content {
+    padding: 16px;
+    overflow-y: auto;
+    flex: 1;
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--text-dark);
+  }
+
+  /* ── WINDOW: ABOUT ── */
+  #win-about { top: 60px; left: 60px; width: 480px; height: 360px; }
+
+  .about-header {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+    align-items: flex-start;
+  }
+
+  .about-avatar {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3a6ea5, #c0392b);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    flex-shrink: 0;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+
+  .about-name {
+    font-size: 18px;
+    font-weight: 700;
+    font-family: 'Space Mono', monospace;
+    color: #1a1a1a;
+    letter-spacing: -0.02em;
+  }
+
+  .about-subtitle {
+    font-size: 10px;
+    color: #666;
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+
+  .tag-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 12px;
+  }
+
+  .tag {
+    background: #1a1a1a;
+    color: #fff;
+    font-size: 9px;
+    padding: 3px 8px;
+    border-radius: 2px;
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .tag.red { background: var(--accent); }
+  .tag.blue { background: #3a6ea5; }
+
+  /* ── WINDOW: CAPSTONE ── */
+  #win-capstone { top: 80px; left: 200px; width: 520px; height: 420px; }
+
+  .capstone-title {
+    font-size: 16px;
+    font-weight: 700;
+    font-family: 'Space Mono', monospace;
+    margin-bottom: 4px;
+    color: #1a1a1a;
+  }
+
+  .capstone-subtitle {
+    font-size: 10px;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 14px;
+    font-weight: 700;
+  }
+
+  .section-label {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #999;
+    font-weight: 700;
+    margin: 14px 0 6px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 4px;
+  }
+
+  .mechanism-box {
+    background: #1a1a1a;
+    color: #e8e8e8;
+    padding: 12px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-family: 'Space Mono', monospace;
+    line-height: 1.8;
+    margin: 10px 0;
+  }
+
+  .mechanism-box .highlight { color: #ff6b6b; }
+
+  /* ── WINDOW: STRESS REACTIVE ── */
+  #win-stress { top: 100px; left: 100px; width: 560px; height: 400px; }
+
+  #stress-container {
+    width: 100%;
+    height: 100%;
+    background: #0a0a0a;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    transition: background 0.5s ease;
+    border-radius: 0 0 4px 4px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #stress-container canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+  }
+
+  #stress-ui {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    text-align: center;
+  }
+
+  #stress-label {
+    font-family: 'VT323', monospace;
+    font-size: 48px;
+    color: #fff;
+    letter-spacing: 4px;
+    text-shadow: 0 0 20px currentColor;
+    transition: color 0.5s, text-shadow 0.5s;
+  }
+
+  #stress-bar-container {
+    width: 300px;
+    height: 12px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+
+  #stress-bar {
+    height: 100%;
+    width: 20%;
+    background: linear-gradient(90deg, #4a90d9, #c0392b);
+    border-radius: 6px;
+    transition: width 0.3s ease;
+  }
+
+  #stress-desc {
+    font-size: 10px;
+    color: rgba(255,255,255,0.6);
+    font-family: 'Space Mono', monospace;
+    max-width: 320px;
+    line-height: 1.6;
+  }
+
+  #stress-btn {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.4);
+    color: rgba(255,255,255,0.8);
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    padding: 8px 20px;
+    cursor: pointer;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    border-radius: 2px;
+  }
+
+  #stress-btn:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.8);
+    color: white;
+  }
+
+  #stress-mode-label {
+    font-size: 9px;
+    color: rgba(255,255,255,0.4);
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* ── WINDOW: NOTEBOOK ── */
+  #win-notebook { top: 120px; left: 140px; width: 500px; height: 380px; }
+
+  .notebook-intro {
+    background: #fff8e7;
+    border-left: 3px solid #f0a500;
+    padding: 10px 12px;
+    font-size: 11px;
+    margin-bottom: 14px;
+    line-height: 1.6;
+    border-radius: 0 4px 4px 0;
+  }
+
+  .audio-player {
+    background: #1a1a1a;
+    border-radius: 6px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .audio-title {
+    font-size: 11px;
+    color: #fff;
+    font-weight: 700;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .audio-subtitle {
+    font-size: 9px;
+    color: #888;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .audio-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .play-btn {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: white;
+    flex-shrink: 0;
+    transition: transform 0.1s;
+  }
+
+  .play-btn:hover { transform: scale(1.1); }
+
+  .audio-progress {
+    flex: 1;
+    height: 4px;
+    background: #333;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .audio-progress-bar {
+    width: 0%;
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.1s;
+  }
+
+  .response-box {
+    margin-top: 12px;
+    background: #f0f0f0;
+    border-radius: 4px;
+    padding: 10px 12px;
+    font-size: 11px;
+    line-height: 1.6;
+    border-left: 3px solid #3a6ea5;
+    color: #333;
+  }
+
+  .response-box strong {
+    display: block;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #3a6ea5;
+    margin-bottom: 6px;
+  }
+
+  /* ── WINDOW: README ── */
+  #win-readme { top: 90px; left: 80px; width: 440px; height: 340px; }
+
+  .readme-content {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    line-height: 1.9;
+    color: #333;
+    white-space: pre-wrap;
+  }
+
+  .readme-content .comment { color: #999; }
+  .readme-content .key { color: var(--accent); font-weight: 700; }
+  .readme-content .value { color: #3a6ea5; }
+
+  /* ── TRASH WINDOW ── */
+  #win-trash { top: 110px; left: 120px; width: 420px; height: 300px; }
+
+  .trash-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .trash-item:last-child { border-bottom: none; }
+
+  .trash-icon { font-size: 24px; flex-shrink: 0; }
+
+  .trash-item-name {
+    font-size: 11px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 3px;
+  }
+
+  .trash-item-desc {
+    font-size: 10px;
+    color: #666;
+    line-height: 1.5;
+  }
+
+  /* ── DOCK ── */
+  #dock {
+    position: fixed;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 16px;
+    padding: 6px 12px;
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+    z-index: 9998;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+  }
+
+  .dock-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+
+  .dock-item:hover { transform: translateY(-8px) scale(1.2); }
+
+  .dock-icon {
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+  }
+
+  .dock-label {
+    font-size: 9px;
+    color: rgba(255,255,255,0.9);
+    font-family: 'Space Mono', monospace;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+    white-space: nowrap;
+  }
+
+  .dock-dot {
+    width: 4px; height: 4px;
+    background: rgba(255,255,255,0.7);
+    border-radius: 50%;
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: #e0e0e0; }
+  ::-webkit-scrollbar-thumb { background: #aaa; border-radius: 4px; }
+
+  /* ── ANIMATIONS ── */
+  @keyframes windowOpen {
+    from { transform: scale(0.92); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .window.visible { animation: windowOpen 0.15s ease-out; }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .eeg-dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+</style>
+</head>
+<body>
+
+<!-- MENUBAR -->
+<div id="menubar">
+  <span class="apple">🧠</span>
+  <span style="font-weight:700;">Chaeyeon Kim</span>
+  <span>Google Creative Fellowship</span>
+  <div class="right">
+    <span>neuroscientist · composer · filmmaker · engineer</span>
+    <span id="clock"></span>
+  </div>
+</div>
+
+<!-- DESKTOP -->
+<div id="desktop">
+
+  <!-- DESKTOP ICONS -->
+  <div class="icon-grid">
+
+    <div class="icon" onclick="openWindow('win-about')">
+      <div class="icon-img">👤</div>
+      <div class="icon-label">README.txt</div>
+    </div>
+
+    <div class="icon" onclick="openWindow('win-capstone')">
+      <div class="icon-img">📁</div>
+      <div class="icon-label">The Body Conducts</div>
+    </div>
+
+    <div class="icon" onclick="openWindow('win-stress')">
+      <div class="icon-img">🧠</div>
+      <div class="icon-label">EEG_Simulator.app</div>
+    </div>
+
+    <div class="icon" onclick="openWindow('win-notebook')">
+      <div class="icon-img">🎙️</div>
+      <div class="icon-label">NotebookLM_Session</div>
+    </div>
+
+    <div class="icon" onclick="openWindow('win-trash')">
+      <div class="icon-img">🗑️</div>
+      <div class="icon-label">What AI Got Wrong</div>
+    </div>
+
+  </div>
+
+  <!-- WINDOW: README -->
+  <div class="window" id="win-about">
+    <div class="titlebar" onmousedown="startDrag(event, 'win-about')">
+      <div class="traffic-lights">
+        <div class="tl close" onclick="closeWindow('win-about')"></div>
+        <div class="tl min"></div>
+        <div class="tl max"></div>
+      </div>
+      <div class="titlebar-title">README.txt</div>
+    </div>
+    <div class="window-content">
+      <div class="about-header">
+        <div class="about-avatar">🧠</div>
+        <div>
+          <div class="about-name">Chaeyeon Kim</div>
+          <div class="about-subtitle">
+            Minerva University · BA Social Science + Neuroscience<br>
+            San Francisco, CA · Expected 2026
+          </div>
+        </div>
+      </div>
+      <div class="readme-content"><span class="comment">// who I am</span>
+<span class="key">disciplines</span>  <span class="value">neuroscience · composition · film · software</span>
+<span class="key">currently</span>    <span class="value">GenAI product strategy @ NTT Tokyo</span>
+<span class="key">capstone</span>     <span class="value">The Body Conducts — EEG → music → film</span>
+<span class="key">past</span>         <span class="value">Paramount · Harvard CoCoDev · UTDT Neurolab</span>
+
+<span class="comment">// what I make</span>
+I don't work across disciplines. I work at their intersection,
+all at once — because the problems I care about live there.
+
+Chronic stress is invisible. Science communication failed it.
+So I wired electrodes to my skull, extracted my brainwaves,
+and built a tool that converts raw neural data into music.
+
+<span class="comment">// what I want</span>
+To make Google's magic more magical.
+The same way I made invisible biology audible.</div>
+      <div class="tag-row">
+        <span class="tag red">EEG → MIDI</span>
+        <span class="tag blue">Logic Pro</span>
+        <span class="tag">Python · R</span>
+        <span class="tag blue">Film</span>
+        <span class="tag">Psychoneuroimmunology</span>
+        <span class="tag red">Science Art</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- WINDOW: CAPSTONE -->
+  <div class="window" id="win-capstone">
+    <div class="titlebar" onmousedown="startDrag(event, 'win-capstone')">
+      <div class="traffic-lights">
+        <div class="tl close" onclick="closeWindow('win-capstone')"></div>
+        <div class="tl min"></div>
+        <div class="tl max"></div>
+      </div>
+      <div class="titlebar-title">📁 The Body Conducts</div>
+    </div>
+    <div class="window-content">
+      <div class="capstone-title">The Body Conducts</div>
+      <div class="capstone-subtitle">EEG · Music · Film · Literature Review</div>
+
+      <div class="mechanism-box">
+<span class="highlight">stress trigger</span> → HPA axis → cortisol surge → cytokine upregulation
+→ immune dysregulation → <span class="highlight">systemic inflammation</span>
+→ body attacks itself
+→ nobody can see it happening
+
+<span style="color:#888;">// existing formats fail to make this felt</span>
+<span style="color:#888;">// so I made it audible</span></div>
+
+      <div class="section-label">What I Built</div>
+      <p style="font-size:11px; line-height:1.7; color:#333;">
+        Five original scores where <strong>my own EEG brainwaves</strong> — recorded under induced stress — are converted into a real-time spectral EQ filter that shapes what you hear. The audience isn't listening to music <em>about</em> stress. They're inside a physiological record of it.
+      </p>
+
+      <div class="section-label">The Films</div>
+      <p style="font-size:11px; line-height:1.7; color:#333;">
+        Three films. A female conductor whose orchestra refuses to sync — mirroring how chronic stress causes body systems to miscoordinate. Each character is an instrument. The Wolf is stress itself: jazz, unpredictable, impossible to resolve cleanly.
+      </p>
+
+      <div class="section-label">Why It Had To Exist</div>
+      <p style="font-size:11px; line-height:1.7; color:#333;">
+        No one had made chronic social stress <em>felt</em> through biometric data, music, and film simultaneously. It required being a neuroscientist, composer, filmmaker, and software engineer at once. I am all of them all at once.
+      </p>
+    </div>
+  </div>
+
+  <!-- WINDOW: STRESS SIMULATOR -->
+  <div class="window" id="win-stress">
+    <div class="titlebar" onmousedown="startDrag(event, 'win-stress')">
+      <div class="traffic-lights">
+        <div class="tl close" onclick="closeWindow('win-stress')"></div>
+        <div class="tl min"></div>
+        <div class="tl max"></div>
+      </div>
+      <div class="titlebar-title">🧠 EEG Stress Simulator — Alpha Suppression Model</div>
+    </div>
+    <div class="window-content" style="padding:0; overflow:hidden;">
+      <div id="stress-container">
+        <canvas id="eeg-canvas"></canvas>
+        <div id="stress-ui">
+          <div id="stress-label">BASELINE</div>
+          <div id="stress-bar-container">
+            <div id="stress-bar"></div>
+          </div>
+          <div id="stress-desc">
+            Alpha suppression: 0% · System at rest<br>
+            <span id="eeg-reading" style="color:#4a90d9;">α power: high · HPA axis: inactive</span>
+          </div>
+          <button id="stress-btn" onclick="runStressSimulation()">▶ Induce Stress Condition</button>
+          <div id="stress-mode-label">Simulating Chaeyeon's EEG pipeline · CapBaseline state</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WINDOW: NOTEBOOKLM -->
+  <div class="window" id="win-notebook">
+    <div class="titlebar" onmousedown="startDrag(event, 'win-notebook')">
+      <div class="traffic-lights">
+        <div class="tl close" onclick="closeWindow('win-notebook')"></div>
+        <div class="tl min"></div>
+        <div class="tl max"></div>
+      </div>
+      <div class="titlebar-title">🎙️ NotebookLM — AI reads my brain</div>
+    </div>
+    <div class="window-content">
+      <div class="notebook-intro">
+        I uploaded my entire capstone into NotebookLM and let it generate a podcast about my own work. Then I watched it get some things right — and some things interestingly wrong. Below is what I pushed back on.
+      </div>
+
+      <div class="audio-player">
+        <div class="audio-title">NotebookLM Audio Overview</div>
+        <div class="audio-subtitle">Generated from: capstone · resume · scripts · film notes</div>
+        <div class="audio-controls">
+          <button class="play-btn" onclick="simulatePlay()">▶</button>
+          <div class="audio-progress">
+            <div class="audio-progress-bar" id="audio-bar"></div>
+          </div>
+          <span style="font-size:10px; color:#888; font-family:'Space Mono',monospace;">2:14</span>
+        </div>
+        <div class="audio-subtitle" id="audio-status">→ Add your NotebookLM audio link here</div>
+      </div>
+
+      <div class="response-box">
+        <strong>My response to the AI</strong>
+        NotebookLM described The Body Conducts as a "data visualization project." That's the gap I'm trying to close. The EEG data isn't visualized — it's <em>instantiated</em>. There's no representation happening. The stress signal is a compositional force that acts directly on the sound. When the music feels like it's suffocating, that's not metaphor. That's my alpha suppression doing it in real time.
+      </div>
+
+      <div class="response-box" style="border-left-color: var(--accent); margin-top:10px;">
+        <strong>What it got right</strong>
+        It called my work "a rare synthesis of hard science and emotional truth." I'll take that.
+      </div>
+    </div>
+  </div>
+
+  <!-- WINDOW: TRASH -->
+  <div class="window" id="win-trash">
+    <div class="titlebar" onmousedown="startDrag(event, 'win-trash')">
+      <div class="traffic-lights">
+        <div class="tl close" onclick="closeWindow('win-trash')"></div>
+        <div class="tl min"></div>
+        <div class="tl max"></div>
+      </div>
+      <div class="titlebar-title">🗑️ What AI Got Wrong</div>
+    </div>
+    <div class="window-content">
+      <p style="font-size:11px; color:#666; margin-bottom:14px; line-height:1.6;">Things AI tools confidently misunderstood about my work. I find these more interesting than what they got right.</p>
+
+      <div class="trash-item">
+        <div class="trash-icon">📊</div>
+        <div>
+          <div class="trash-item-name">"Data visualization project"</div>
+          <div class="trash-item-desc">The EEG data isn't visualized. It's instantiated as a compositional force. The music doesn't point at stress from outside — it runs stress from inside.</div>
+        </div>
+      </div>
+
+      <div class="trash-item">
+        <div class="trash-icon">🎵</div>
+        <div>
+          <div class="trash-item-name">"Music inspired by neuroscience"</div>
+          <div class="trash-item-desc">Not inspired by. Made of. There's a difference between a painting of fire and something actually on fire.</div>
+        </div>
+      </div>
+
+      <div class="trash-item">
+        <div class="trash-icon">💆</div>
+        <div>
+          <div class="trash-item-name">"Wellness content"</div>
+          <div class="trash-item-desc">This is not telling you to meditate. This is a political argument that the system generating your stress is the problem, not your response to it.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- DOCK -->
+<div id="dock">
+  <div class="dock-item" onclick="openWindow('win-about')">
+    <div class="dock-icon">👤</div>
+    <div class="dock-label">About</div>
+  </div>
+  <div class="dock-item" onclick="openWindow('win-capstone')">
+    <div class="dock-icon">📁</div>
+    <div class="dock-label">Capstone</div>
+  </div>
+  <div class="dock-item" onclick="openWindow('win-stress')">
+    <div class="dock-icon">🧠</div>
+    <div class="dock-label">EEG Sim</div>
+  </div>
+  <div class="dock-item" onclick="openWindow('win-notebook')">
+    <div class="dock-icon">🎙️</div>
+    <div class="dock-label">NotebookLM</div>
+  </div>
+  <div class="dock-item" onclick="openWindow('win-trash')">
+    <div class="dock-icon">🗑️</div>
+    <div class="dock-label">AI Errors</div>
+  </div>
+</div>
+
+<script>
+// ── CLOCK ──
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+// ── WINDOW MANAGEMENT ──
+let activeWindow = null;
+
+function openWindow(id) {
+  const win = document.getElementById(id);
+  if (!win) return;
+
+  // Deactivate all
+  document.querySelectorAll('.window').forEach(w => w.classList.remove('active'));
+
+  // Position if first open
+  if (!win.classList.contains('visible')) {
+    const offset = Math.random() * 30 - 15;
+    win.style.left = (80 + offset) + 'px';
+    win.style.top  = (60 + offset) + 'px';
+    win.classList.add('visible');
+  }
+
+  win.classList.add('active');
+  activeWindow = id;
+
+  if (id === 'win-stress') initEEGCanvas();
+}
+
+function closeWindow(id) {
+  const win = document.getElementById(id);
+  win.classList.remove('visible', 'active');
+}
+
+// Click window to activate
+document.querySelectorAll('.window').forEach(win => {
+  win.addEventListener('mousedown', () => {
+    document.querySelectorAll('.window').forEach(w => w.classList.remove('active'));
+    win.classList.add('active');
+  });
+});
+
+// ── DRAG ──
+let dragging = null, dragOffX = 0, dragOffY = 0;
+
+function startDrag(e, id) {
+  const win = document.getElementById(id);
+  dragging = win;
+  dragOffX = e.clientX - win.offsetLeft;
+  dragOffY = e.clientY - win.offsetTop;
+  e.preventDefault();
+}
+
+document.addEventListener('mousemove', e => {
+  if (!dragging) return;
+  dragging.style.left = (e.clientX - dragOffX) + 'px';
+  dragging.style.top  = Math.max(22, e.clientY - dragOffY) + 'px';
+});
+
+document.addEventListener('mouseup', () => { dragging = null; });
+
+// ── EEG CANVAS ──
+let eegCanvas, eegCtx, eegAnim;
+let stressLevel = 0.15;
+let targetStress = 0.15;
+let waveOffset = 0;
+let stressMode = 'baseline';
+
+const stressModes = [
+  { name: 'CapBaseline', stress: 0.15, label: 'BASELINE', color: '#4a90d9', desc: 'α power: high · HPA axis: inactive', reading: 'α suppression: 12% · System at rest' },
+  { name: 'CapNback', stress: 0.65, label: 'COGNITIVE STRESS', color: '#f0a500', desc: 'α suppression: active · DLPFC engaged', reading: 'α suppression: 63% · HPA axis: activating' },
+  { name: 'CapLinkedin', stress: 0.75, label: 'SOCIAL THREAT', color: '#e74c3c', desc: 'amygdala → SNS → cytokine cascade', reading: 'α suppression: 78% · immune response: elevated' },
+  { name: 'CapRecovery', stress: 0.28, label: 'RECOVERY', color: '#27ae60', desc: 'α power: returning · HPA axis: dampening', reading: 'α suppression: 28% · partial recovery' },
+];
+let modeIndex = 0;
+
+function initEEGCanvas() {
+  eegCanvas = document.getElementById('eeg-canvas');
+  if (!eegCanvas) return;
+  eegCtx = eegCanvas.getContext('2d');
+  resizeCanvas();
+  if (!eegAnim) animateEEG();
+}
+
+function resizeCanvas() {
+  if (!eegCanvas) return;
+  const container = document.getElementById('stress-container');
+  eegCanvas.width = container.offsetWidth;
+  eegCanvas.height = container.offsetHeight;
+}
+
+function animateEEG() {
+  eegAnim = requestAnimationFrame(animateEEG);
+  if (!eegCtx) return;
+
+  const w = eegCanvas.width, h = eegCanvas.height;
+  const mode = stressModes[modeIndex];
+
+  // Smooth stress
+  stressLevel += (targetStress - stressLevel) * 0.04;
+
+  // Background
+  const bgIntensity = Math.floor(stressLevel * 20);
+  eegCtx.fillStyle = `rgb(${bgIntensity},${Math.floor(bgIntensity*0.3)},${Math.floor(bgIntensity*0.3)})`;
+  eegCtx.fillRect(0, 0, w, h);
+
+  // Draw EEG waves
+  const numWaves = 3;
+  for (let wi = 0; wi < numWaves; wi++) {
+    eegCtx.beginPath();
+    const amplitude = 15 + stressLevel * 60 + wi * 8;
+    const freq = 0.02 + stressLevel * 0.04 + wi * 0.008;
+    const yBase = h * (0.3 + wi * 0.2);
+    const speed = 2 + stressLevel * 4;
+    const alpha = 0.15 + (numWaves - wi) * 0.12;
+
+    // Color interpolation
+    const r = Math.floor(74 + stressLevel * 118);
+    const g = Math.floor(144 - stressLevel * 100);
+    const b = Math.floor(217 - stressLevel * 170);
+    eegCtx.strokeStyle = `rgba(${r},${g},${b},${alpha})`;
+    eegCtx.lineWidth = 1.5 - wi * 0.3;
+
+    for (let x = 0; x < w; x++) {
+      const noise = (Math.random() - 0.5) * stressLevel * 12;
+      const y = yBase
+        + Math.sin((x * freq) + waveOffset * speed + wi * 2) * amplitude
+        + Math.sin((x * freq * 2.3) + waveOffset * speed * 0.7 + wi) * amplitude * 0.4
+        + noise;
+      x === 0 ? eegCtx.moveTo(x, y) : eegCtx.lineTo(x, y);
+    }
+    eegCtx.stroke();
+  }
+
+  // Main bright wave
+  eegCtx.beginPath();
+  const mainAmplitude = 20 + stressLevel * 80;
+  const r = Math.floor(74 + stressLevel * 118);
+  const g = Math.floor(144 - stressLevel * 100);
+  const b = Math.floor(217 - stressLevel * 170);
+  eegCtx.strokeStyle = `rgba(${r},${g},${b},0.9)`;
+  eegCtx.lineWidth = 2;
+
+  for (let x = 0; x < w; x++) {
+    const spike = stressLevel > 0.5 && Math.random() < 0.003 ? (Math.random() - 0.5) * 80 : 0;
+    const y = h * 0.5
+      + Math.sin((x * 0.025) + waveOffset * (2 + stressLevel * 3)) * mainAmplitude
+      + Math.sin((x * 0.051) + waveOffset * 1.4) * mainAmplitude * 0.5
+      + spike;
+    x === 0 ? eegCtx.moveTo(x, y) : eegCtx.lineTo(x, y);
+  }
+  eegCtx.stroke();
+
+  // Grid lines
+  eegCtx.strokeStyle = 'rgba(255,255,255,0.05)';
+  eegCtx.lineWidth = 1;
+  for (let x = 0; x < w; x += 40) {
+    eegCtx.beginPath();
+    eegCtx.moveTo(x, 0);
+    eegCtx.lineTo(x, h);
+    eegCtx.stroke();
+  }
+
+  waveOffset += 0.015;
+
+  // Update UI
+  document.getElementById('stress-bar').style.width = (stressLevel * 100) + '%';
+  document.getElementById('stress-container').style.background =
+    `rgb(${Math.floor(stressLevel * 25)},${Math.floor(stressLevel * 8)},${Math.floor(stressLevel * 8)})`;
+}
+
+function runStressSimulation() {
+  modeIndex = (modeIndex + 1) % stressModes.length;
+  const mode = stressModes[modeIndex];
+  targetStress = mode.stress;
+
+  document.getElementById('stress-label').textContent = mode.label;
+  document.getElementById('stress-label').style.color = mode.color;
+  document.getElementById('stress-label').style.textShadow = `0 0 30px ${mode.color}`;
+  document.getElementById('stress-desc').innerHTML =
+    mode.desc + '<br><span id="eeg-reading" style="color:' + mode.color + '">' + mode.reading + '</span>';
+  document.getElementById('stress-mode-label').textContent =
+    'Simulating: ' + mode.name + ' · Chaeyeon\'s actual EEG segment';
+
+  const labels = ['▶ Induce Stress Condition', '▶ Social Threat (LinkedIn)', '▶ Brief Recovery', '▶ Reset to Baseline'];
+  document.getElementById('stress-btn').textContent = labels[modeIndex];
+}
+
+// ── AUDIO SIMULATION ──
+let audioPlaying = false, audioInterval;
+
+function simulatePlay() {
+  if (audioPlaying) {
+    clearInterval(audioInterval);
+    audioPlaying = false;
+    document.querySelector('.play-btn').textContent = '▶';
+    return;
+  }
+  audioPlaying = true;
+  document.querySelector('.play-btn').textContent = '⏸';
+  let progress = 0;
+  audioInterval = setInterval(() => {
+    progress += 0.7;
+    document.getElementById('audio-bar').style.width = Math.min(progress, 100) + '%';
+    if (progress >= 100) {
+      clearInterval(audioInterval);
+      audioPlaying = false;
+      document.querySelector('.play-btn').textContent = '▶';
+      document.getElementById('audio-status').textContent = '→ Replace with your NotebookLM audio embed';
+    }
+  }, 900);
+}
+
+// Open README on load
+window.onload = () => {
+  setTimeout(() => openWindow('win-about'), 300);
+};
+</script>
+</body>
+</html>
